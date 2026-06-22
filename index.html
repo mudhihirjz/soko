@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evolutionary Trading System</title>
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <style>
+        /* ============================================ */
+        /* RESET & BASE                                */
+        /* ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(145deg, #0b0e1a 0%, #1a1f2f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden; /* Inazuia skrini kucheza kushoto/kulia kwenye simu */
+        }
+
+        /* Background glow */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255, 180, 50, 0.03) 0%, transparent 70%);
+            animation: pulseGlow 6s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.6; }
+        }
+
+        /* ============================================ */
+        /* PAGE CONTAINERS                              */
+        /* ============================================ */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out, visibility 0.8s;
+            z-index: 1;
+        }
+
+        /* Welcoming Page */
+        #welcomingPage {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        #welcomingPage.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+            visibility: hidden; /* Inaficha ukurasa huu kabisa isilete migogoro ya skroli baadae */
+        }
+
+        /* Landing Page */
+        #landingPage {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+            z-index: 2;
+            visibility: hidden;
+        }
+
+        #landingPage.visible {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        /* ============================================ */
+        /* WELCOMING PAGE STYLES                       */
+        /* ============================================ */
+        .welcoming-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .text-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            padding: 40px 20px;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .word-line {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 1.2em;
+        }
+
+        .animated-word {
+            font-size: clamp(1.8rem, 7.5vw, 4.5rem); /* Imeboreshwa isizidi ukubwa kwenye simu ndogo */
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            color: transparent;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 50%, #f6d365 100%);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shimmerText 4s ease-in-out infinite;
+            text-shadow: 0 0 40px rgba(253, 160, 133, 0.2);
+            font-family: 'Segoe UI', 'Arial Black', sans-serif;
+            text-transform: uppercase;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-line:last-child .animated-word {
+            font-size: clamp(1.6rem, 6.5vw, 4rem);
+            letter-spacing: 0.06em;
+        }
+
+        @keyframes shimmerText {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 3px;
+            height: 0.85em;
+            background: #f6d365;
+            margin-left: 4px;
+            animation: blink 0.8s step-end infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .welcoming-footer {
+            width: 100%;
+            padding: 25px 20px 20px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            margin-top: 10px;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .footer-content .powered {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 300;
+        }
+
+        .footer-content .brand {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #f6d365, #fda085);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+        }
+
+        .footer-divider {
+            width: 35px;
+            height: 2px;
+            background: linear-gradient(90deg, #f6d365, #fda085);
+            border-radius: 2px;
+            margin: 2px auto 8px;
+            opacity: 0.3;
+        }
+
+        /* ============================================ */
+        /* LANDING PAGE STYLES                         */
+        /* ============================================ */
+        .landing-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            padding: 40px 10px;
+        }
+
+        .landing-title {
+            font-size: clamp(1.5rem, 5.5vw, 3.5rem);
+            font-weight: 900;
+            text-align: center;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 50%, #f6d365 100%);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: shimmerText 4s ease-in-out infinite;
+            margin-bottom: 15px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .landing-subtitle {
+            font-size: clamp(0.95rem, 2.5vw, 1.4rem);
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            margin-bottom: 40px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            line-height: 1.5;
+            max-width: 700px;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+            max-width: 850px;
+            justify-content: center;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 280px; /* Imeongezwa kidogo ili isinyofoke sana kwenye simu pana */
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 35px 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            -webkit-tap-highlight-color: transparent; /* Inazuia ule mwangaza wa bluu wa simu wakati wa kubonyeza */
+        }
+
+        /* Hover athari itafanya kazi kwenye kompyuta tu */
+        @media (hover: hover) {
+            .tab:hover {
+                transform: translateY(-6px);
+                background: rgba(255, 255, 255, 0.08);
+                border-color: rgba(246, 211, 101, 0.3);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            }
+            .tab:hover .tab-icon {
+                transform: scale(1.05);
+            }
+            .tab:hover .tab-arrow {
+                color: #f6d365;
+                transform: translateX(5px);
+            }
+        }
+
+        /* Athari safi ya kubonyeza kwenye simu */
+        .tab:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-label {
+            font-size: clamp(0.95rem, 2vw, 1.2rem);
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        .tab-icon {
+            font-size: clamp(3.5rem, 8vw, 5rem);
+            color: #1a1a1a;
+            background: #f6d365;
+            width: clamp(80px, 15vw, 110px);
+            height: clamp(80px, 15vw, 110px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(246, 211, 101, 0.2);
+        }
+
+        .tab-role {
+            font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .tab-arrow {
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        /* ============================================ */
+        /* RESPONSIVE - MAREKEBISHO YA SIMU             */
+        /* ============================================ */
+        @media (max-width: 700px) {
+            .tabs-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+
+            .tab {
+                width: 100%;
+                max-width: 100%; /* Inajaza upana wa simu vizuri */
+                padding: 25px 20px;
+            }
+
+            .landing-title {
+                font-size: 1.6rem;
+                padding: 0 10px;
+            }
+
+            .landing-subtitle {
+                font-size: 0.95rem;
+                margin-bottom: 30px;
+                padding: 0 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .animated-word {
+                font-size: 1.5rem !important; /* Inazuia neno kisikatike kwenye simu ndogo sana */
+            }
+            .word-line:last-child .animated-word {
+                font-size: 1.3rem !important;
+            }
+            .tab-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page" id="welcomingPage">
+        <div class="welcoming-container">
+            <div class="text-container">
+                <div class="word-line">
+                    <div class="animated-word" id="animatedWord1"><span class="cursor"></span></div>
+                </div>
+                <div class="word-line">
+                    <div class="animated-word" id="animatedWord2"><span class="cursor"></span></div>
+                </div>
+            </div>
+            <footer class="welcoming-footer">
+                <div class="footer-content">
+                    <div class="footer-divider"></div>
+                    <span class="powered"><i class="fa-regular fa-gem"></i> Powered by</span>
+                    <span class="brand"><i class="fa-solid fa-code"></i> MudhihirjzTech</span>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <div class="page" id="landingPage">
+        <div class="landing-container">
+            <h1 class="landing-title">
+                <i class="fa-solid fa-chart-line" style="font-size: 0.7em; margin-right: 10px; opacity: 0.5;"></i>
+                EVOLUTIONARY TRADING SYSTEM
+            </h1>
+            <p class="landing-subtitle">
+                <i class="fa-regular fa-hand-peace" style="margin-right: 8px; color: #f6d365;"></i>
+                Welcome to your new and updated community, online market.!
+            </p>
+            <div class="tabs-container">
+                <div class="tab" id="customerTab">
+                    <div class="tab-label"><i class="fa-regular fa-hand-point-right" style="color: #f6d365; margin-right: 6px;"></i>Welcome to the market.!</div>
+                    <div class="tab-icon"><i class="fa-solid fa-store"></i></div>
+                    <div class="tab-role">Customer</div>
+                    <div class="tab-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                </div>
+                <div class="tab" id="traderTab">
+                    <div class="tab-label"><i class="fa-regular fa-hand-point-right" style="color: #f6d365; margin-right: 6px;"></i>Welcome to the market.!</div>
+                    <div class="tab-icon"><i class="fa-solid fa-briefcase"></i></div>
+                    <div class="tab-role">Trader</div>
+                    <div class="tab-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const WORD1 = 'EVOLUTIONARY';
+            const WORD2 = 'TRADING';
+
+            const wordElement1 = document.getElementById('animatedWord1');
+            const wordElement2 = document.getElementById('animatedWord2');
+
+            let currentIndex1 = 0;
+            let currentIndex2 = 0;
+            let interval1 = null;
+            let interval2 = null;
+
+            function addLetter1() {
+                if (currentIndex1 >= WORD1.length) {
+                    clearInterval(interval1);
+                    return;
+                }
+                const char = WORD1.charAt(currentIndex1);
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.style.animation = 'fadeInChar 0.2s ease forwards';
+                const cursor = wordElement1.querySelector('.cursor');
+                if(cursor) wordElement1.insertBefore(span, cursor);
+                currentIndex1++;
+            }
+
+            function addLetter2() {
+                if (currentIndex2 >= WORD2.length) {
+                    clearInterval(interval2);
+                    // Kufuta blinking cursor baada ya maneno kuisha kwa muonekano safi
+                    setTimeout(() => {
+                        document.querySelectorAll('.cursor').forEach(c => c.style.display = 'none');
+                    }, 500);
+                    return;
+                }
+                const char = WORD2.charAt(currentIndex2);
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.style.animation = 'fadeInChar 0.2s ease forwards';
+                const cursor = wordElement2.querySelector('.cursor');
+                if(cursor) wordElement2.insertBefore(span, cursor);
+                currentIndex2++;
+            }
+
+            const styleSheet = document.createElement('style');
+            styleSheet.textContent = `
+                @keyframes fadeInChar {
+                    0% { opacity: 0; transform: translateX(-5px) scale(0.9); }
+                    100% { opacity: 1; transform: translateX(0) scale(1); }
+                }
+            `;
+            document.head.appendChild(styleSheet);
+
+            function startWelcomingAnimation() {
+                interval1 = setInterval(addLetter1, 120);
+                setTimeout(() => {
+                    interval2 = setInterval(addLetter2, 120);
+                }, 600);
+            }
+
+            const welcomingPage = document.getElementById('welcomingPage');
+            const landingPage = document.getElementById('landingPage');
+
+            function transitionToLanding() {
+                welcomingPage.classList.add('hidden');
+                landingPage.classList.add('visible');
+            }
+
+            // Interactive Feedback
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.93)';
+                    setTimeout(() => this.style.transform = '', 150);
+                });
+            });
+
+            window.addEventListener('load', function() {
+                setTimeout(startWelcomingAnimation, 200);
+                setTimeout(transitionToLanding, 3800); // Muda umeongezwa kidogo ili mtumiaji asishtuke tabu inapofunguka
+            });
+        })();
+    </script>
+</body>
+</html>
