@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>MARKETPLACE</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; }
+    body {
+      min-height: 100vh; min-height: 100dvh;
+      background: #0b0c0e;
+      font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
+      display: flex; flex-direction: column;
+    }
+    .app-wrapper {
+      display: flex; flex-direction: column;
+      min-height: 100vh; min-height: 100dvh;
+      width: 100%; max-width: 100%; margin: 0 auto;
+      position: relative; overflow: hidden;
+    }
+    .main-content {
+      flex: 1; display: flex; flex-direction: column;
+      width: 100%; background: linear-gradient(145deg, #0f1115 0%, #0b0c0e 100%);
+      position: relative; overflow: hidden;
+    }
+
+    /* ============ PAGE CONTAINERS ============ */
+    .page {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      background: linear-gradient(145deg, #0f1115 0%, #0b0c0e 100%);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      z-index: 1;
+    }
+    .page-active { z-index: 10; transform: translateX(0); opacity: 1; }
+    .page-hidden-right { transform: translateX(100%); opacity: 0; z-index: 5; pointer-events: none; }
+
+    /* ============ LOGIN PAGE ============ */
+    .login-container {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; padding: 30px; text-align: center; gap: 20px;
+    }
+    .login-logo {
+      font-size: 3rem; color: #d4af37; margin-bottom: 10px;
+    }
+    .login-title {
+      color: #e6d7b8; font-size: 1.5rem; font-weight: 700;
+    }
+    .login-subtitle {
+      color: #b9a577; font-size: 0.9rem; line-height: 1.5;
+    }
+    .btn-google {
+      display: flex; align-items: center; gap: 12px;
+      background: #fff; color: #333; padding: 14px 28px;
+      border-radius: 30px; font-weight: 600; font-size: 0.95rem;
+      cursor: pointer; border: none; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      transition: all 0.3s; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-google:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
+    .btn-google img { width: 22px; height: 22px; }
+    .login-footer-text {
+      color: #5a5a5a; font-size: 0.7rem; margin-top: 20px;
+    }
+
+    /* ============ BROWSE PAGE HEADER ============ */
+    .browse-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(212,175,55,0.1);
+      background: rgba(15,17,21,0.95);
+    }
+    .user-avatar-sm {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #d4af37; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.7rem; color: #0b0c0e; flex-shrink: 0;
+    }
+    .user-email-sm {
+      color: #b9a577; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .browse-header h2 { color: #e6d7b8; font-size: 1rem; font-weight: 700; margin-left: 10px; }
+
+    /* ============ SEARCH AREA ============ */
+    .search-area {
+      padding: 10px 14px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;
+    }
+    .search-input-wrap {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(20,22,27,0.8); border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 24px; padding: 10px 16px;
+    }
+    .search-input-wrap i { color: #7a7a7a; font-size: 0.9rem; }
+    .search-input-wrap input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #f0e6d2; font-size: 0.85rem;
+    }
+    .search-input-wrap input::placeholder { color: #5a5a5a; }
+    .search-tags {
+      display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+    }
+    .search-tags::-webkit-scrollbar { height: 0; }
+    .search-tag {
+      padding: 5px 12px; border-radius: 16px; white-space: nowrap; flex-shrink: 0;
+      background: rgba(20,22,27,0.7); border: 1px solid rgba(212,175,55,0.15);
+      color: #7a7a7a; font-size: 0.7rem; cursor: pointer; transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .search-tag:hover, .search-tag.active-tag {
+      background: rgba(212,175,55,0.15); border-color: #d4af37; color: #d4af37;
+    }
+
+    /* ============ PRODUCT GRID ============ */
+    .product-grid {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      padding: 10px 14px;
+    }
+    .product-grid::-webkit-scrollbar { width: 3px; }
+    .product-grid::-webkit-scrollbar-track { background: transparent; }
+    .product-grid::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.1); border-radius: 3px; }
+
+    .product-card {
+      background: rgba(20,22,27,0.8); border: 1px solid rgba(212,175,55,0.1);
+      border-radius: 16px; overflow: hidden; transition: all 0.2s; cursor: pointer;
+    }
+    .product-card:hover { border-color: rgba(212,175,55,0.3); }
+    .product-image {
+      width: 100%; height: 130px; background: rgba(10,11,13,0.5);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; }
+    .product-image i { font-size: 2rem; color: #3a3a3a; }
+    .product-info { padding: 10px; }
+    .product-name {
+      color: #e6d7b8; font-size: 0.8rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .product-price {
+      color: #d4af37; font-size: 0.9rem; font-weight: 700; margin-top: 2px;
+    }
+    .product-meta {
+      display: flex; align-items: center; gap: 4px; margin-top: 3px;
+      color: #7a7a7a; font-size: 0.6rem;
+    }
+    .trader-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 8px;
+      font-size: 0.55rem; font-weight: 600; text-transform: uppercase;
+    }
+    .badge-wholesale { background: rgba(212,175,55,0.15); color: #d4af37; border: 1px solid rgba(212,175,55,0.3); }
+    .badge-retail { background: rgba(52,152,219,0.15); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+
+    /* ============ PRODUCT DETAIL PAGE ============ */
+    .detail-scroll {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      display: flex; flex-direction: column; gap: 12px; padding: 14px;
+    }
+    .detail-header {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .btn-back {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: rgba(20,22,27,0.7); border: 1px solid rgba(212,175,55,0.2);
+      color: #d4af37; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 0.85rem; -webkit-tap-highlight-color: transparent;
+    }
+    .detail-image {
+      width: 100%; height: 200px; border-radius: 16px; overflow: hidden;
+      background: rgba(10,11,13,0.5); display: flex; align-items: center; justify-content: center;
+    }
+    .detail-image img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-name { color: #e6d7b8; font-size: 1.2rem; font-weight: 700; }
+    .detail-price { color: #d4af37; font-size: 1.4rem; font-weight: 800; }
+    .detail-desc { color: #b0a590; font-size: 0.85rem; line-height: 1.5; }
+    .detail-meta-row {
+      display: flex; flex-wrap: wrap; gap: 8px; color: #7a7a7a; font-size: 0.75rem;
+    }
+    .detail-meta-row span { display: flex; align-items: center; gap: 4px; }
+    .detail-meta-row i { color: #d4af37; }
+    .delivery-info { font-weight: 600; font-size: 0.8rem; }
+    .delivery-yes { color: #2ecc71; }
+    .delivery-no { color: #7a7a7a; }
+
+    .action-buttons { display: flex; gap: 8px; }
+    .btn-action {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 12px; border-radius: 12px; font-weight: 600; font-size: 0.78rem;
+      text-transform: uppercase; cursor: pointer; border: none;
+      transition: all 0.3s; -webkit-tap-highlight-color: transparent; text-decoration: none;
+    }
+    .btn-wa { background: #25D366; color: #fff; }
+    .btn-call { background: rgba(52,152,219,0.2); border: 1px solid rgba(52,152,219,0.4); color: #3498db; }
+    .btn-dm { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.4); color: #d4af37; }
+
+    /* ============ CHAT PAGE ============ */
+    .chat-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(212,175,55,0.1);
+    }
+    .chat-avatar {
+      width: 36px; height: 36px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-weight: 700;
+      font-size: 0.8rem; color: #0b0c0e; flex-shrink: 0;
+    }
+    .chat-user-name { color: #e6d7b8; font-size: 0.85rem; font-weight: 600; flex: 1; }
+    .chat-messages {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 14px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .chat-bubble {
+      max-width: 80%; padding: 10px 14px; border-radius: 16px;
+      font-size: 0.82rem; line-height: 1.4; word-break: break-word;
+    }
+    .chat-bubble.incoming {
+      align-self: flex-start; background: rgba(30,33,40,0.9);
+      border: 1px solid rgba(212,175,55,0.15); color: #d5cfc0;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-bubble.outgoing {
+      align-self: flex-end; background: rgba(212,175,55,0.15);
+      border: 1px solid rgba(212,175,55,0.25); color: #ebd494;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-input-row {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px; flex-shrink: 0;
+      border-top: 1px solid rgba(212,175,55,0.1);
+    }
+    .btn-order-now {
+      background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff;
+      border: none; padding: 8px 14px; border-radius: 20px;
+      font-weight: 700; font-size: 0.7rem; text-transform: uppercase;
+      cursor: pointer; -webkit-tap-highlight-color: transparent; white-space: nowrap;
+    }
+    .chat-input-row input {
+      flex: 1; background: rgba(20,22,27,0.8);
+      border: 1px solid rgba(212,175,55,0.2); border-radius: 20px;
+      padding: 9px 14px; color: #f0e6d2; font-size: 0.82rem; outline: none;
+    }
+    .btn-send-chat {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #c9a53b, #b8942e); border: none;
+      color: #0b0c0e; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 0.8rem; -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ============ MESSAGE LIST PAGE ============ */
+    .msg-list-scroll {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+    .msg-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; cursor: pointer; border-bottom: 1px solid rgba(212,175,55,0.05);
+    }
+    .msg-item:hover { background: rgba(212,175,55,0.03); }
+
+    /* ============ FOOTER ============ */
+    .app-footer {
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      padding: 10px 20px; background: #0b0c0e;
+      border-top: 1px solid rgba(212,175,55,0.1);
+      position: relative; flex-shrink: 0;
+    }
+    .footer-center { color: #7a7a7a; font-size: 0.65rem; text-align: center; }
+    .footer-right { color: #9e9e9e; font-size: 0.65rem; position: absolute; right: 20px; }
+
+    .toast-container {
+      position: fixed; top: 16px; right: 16px; z-index: 100;
+      display: flex; flex-direction: column; gap: 6px; max-width: 300px;
+    }
+    .toast {
+      padding: 10px 14px; border-radius: 10px; color: #fff;
+      font-size: 0.75rem; font-weight: 500;
+      animation: slideInToast 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    .toast-success { background: #2ecc71; }
+    .toast-info { background: #3498db; }
+    @keyframes slideInToast {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @media (min-width: 768px) {
+      .product-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .app-wrapper { max-width: 800px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-wrapper">
+    <div class="main-content">
+      
+      <!-- ==================== PAGE 1: GOOGLE LOGIN ==================== -->
+      <div id="pageLogin" class="page page-active">
+        <button class="btn-back" id="btnListBack"><i class="fas fa-arrow-left"></i></button>
+        <div class="login-container">
+          <i class="fas fa-store-alt login-logo"></i>
+          <div class="login-title">Welcome to the Market!</div>
+          <div class="login-subtitle">Browse products from trusted traders.<br>No password needed. Just sign in with Google.</div>
+          <button class="btn-google" id="btnGoogleLogin">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Sign in with Google
+          </button>
+          <div class="login-footer-text">Powered by MudhihirjzTech</div>
+        </div>
+      </div>
+
+      <!-- ==================== PAGE 2: BROWSE PRODUCTS ==================== -->
+      <div id="pageBrowse" class="page page-hidden-right">
+        <div class="browse-header">
+          <div class="user-avatar-sm" id="browseAvatar">U</div>
+          <span class="user-email-sm" id="browseEmail">user@gmail.com</span>
+          <h2>Marketplace</h2>
+          <button class="btn-back" id="btnBrowseHome" style="margin-left: auto; width: 32px; height: 32px;"><i class="fas fa-home"></i></button>
+        </div>
+        <div class="search-area">
+          <div class="search-input-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search products...">
+          </div>
+          <div class="search-tags" id="searchTags">
+            <span class="search-tag" data-tag="electronics">Electronics</span>
+            <span class="search-tag" data-tag="fashion">Fashion</span>
+            <span class="search-tag" data-tag="food">Food</span>
+            <span class="search-tag" data-tag="construction">Construction</span>
+            <span class="search-tag" data-tag="agriculture">Agriculture</span>
+            <span class="search-tag" data-tag="all">All Products</span>
+          </div>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+      </div>
+
+      <!-- ==================== PAGE 3: PRODUCT DETAIL ==================== -->
+      <div id="pageDetail" class="page page-hidden-right">
+        <div class="detail-header">
+          <button class="btn-back" id="btnDetailBack"><i class="fas fa-arrow-left"></i></button>
+          <span style="color:#e6d7b8;font-weight:600;">Product Details</span>
+        </div>
+        <div class="detail-scroll" id="detailContent"></div>
+        <div class="action-buttons" id="detailActions" style="padding:10px 14px;flex-shrink:0;"></div>
+      </div>
+
+      <!-- ==================== PAGE 4: CHAT ==================== -->
+      <div id="pageChat" class="page page-hidden-right">
+        <div class="chat-header">
+          <button class="btn-back" id="btnChatBack"><i class="fas fa-arrow-left"></i></button>
+          <div class="chat-avatar" id="chatAvatar" style="background:#d4af37;">S</div>
+          <span class="chat-user-name" id="chatSellerName">Seller</span>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-row">
+          <button class="btn-order-now" id="btnOrderNow"><i class="fas fa-shopping-cart"></i> Order</button>
+          <input type="text" id="chatInput" placeholder="Type message...">
+          <button class="btn-send-chat" id="btnSendChat"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+
+      <!-- ==================== PAGE 5: MESSAGE LIST ==================== -->
+      <div id="pageMsgList" class="page page-hidden-right">
+        <div class="chat-header">
+          <button class="btn-back" id="btnMsgListBack"><i class="fas fa-arrow-left"></i></button>
+          <span style="color:#e6d7b8;font-weight:600;">Messages</span>
+        </div>
+        <div class="msg-list-scroll" id="msgListScroll"></div>
+      </div>
+
+    </div>
+    <div class="app-footer">
+      <span class="footer-center">All rights reserved &copy 2026</span>
+      <span class="footer-right">v.1</span>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    (function() {
+      // ============ PAGES ============
+      const pageLogin = document.getElementById('pageLogin');
+      const pageBrowse = document.getElementById('pageBrowse');
+      const pageDetail = document.getElementById('pageDetail');
+      const pageChat = document.getElementById('pageChat');
+      const pageMsgList = document.getElementById('pageMsgList');
+      const toastContainer = document.getElementById('toastContainer');
+
+      let currentUser = null;
+      let allProducts = [];
+      let conversations = {}; // key: sellerId, value: messages array
+      let activeChatSellerId = null;
+
+      // ============ NAVIGATION ============
+      function navigateTo(page) {
+        [pageLogin, pageBrowse, pageDetail, pageChat, pageMsgList].forEach(p => {
+          p.classList.remove('page-active', 'page-hidden-right');
+          p.classList.add('page-hidden-right');
+        });
+        page.classList.remove('page-hidden-right');
+        page.classList.add('page-active');
+      }
+
+      function showToast(msg, type = 'info') {
+        const t = document.createElement('div');
+        t.className = `toast toast-${type}`;
+        t.textContent = msg;
+        toastContainer.appendChild(t);
+        setTimeout(() => t.remove(), 2500);
+      }
+
+      // ============ GOOGLE LOGIN (Simulated) ============
+      document.getElementById('btnGoogleLogin').addEventListener('click', function() {
+        // Simulate Google OAuth response
+        currentUser = {
+          name: 'Customer User',
+          email: 'customer@gmail.com',
+          initials: 'CU',
+          avatar: null
+        };
+        
+        document.getElementById('browseAvatar').textContent = currentUser.initials;
+        document.getElementById('browseEmail').textContent = currentUser.email;
+        
+        generateProducts();
+        renderProducts('');
+        navigateTo(pageBrowse);
+        showToast('Signed in as ' + currentUser.email, 'success');
+      });
+
+      // ============ GENERATE PRODUCTS FROM SELLERS ============
+      function generateProducts() {
+        const sellers = [
+          { id: 1, name: 'Mudhihirjz Tech', initials: 'MT', phone: '+255712345678', whatsapp: '+255712345678', company: 'Mudhihirjz Tech', location: 'Pwani, Bagamoyo', hours: '08:00 AM - 05:00 PM', traderType: 'wholesale', color: '#d4af37' },
+          { id: 2, name: 'Jane Fashion House', initials: 'JF', phone: '+255723456789', whatsapp: '+255723456789', company: 'Jane Fashion House', location: 'Dar es Salaam, Kinondoni', hours: '09:00 AM - 06:00 PM', traderType: 'retail', color: '#3498db' },
+          { id: 3, name: 'AgriPro Supplies', initials: 'AP', phone: '+255734567890', whatsapp: '+255734567890', company: 'AgriPro Supplies', location: 'Morogoro, Kilosa', hours: '07:00 AM - 04:00 PM', traderType: 'wholesale', color: '#2ecc71' },
+          { id: 4, name: 'BuildRight Materials', initials: 'BM', phone: '+255745678901', whatsapp: '+255745678901', company: 'BuildRight Materials', location: 'Arusha, Meru', hours: '08:00 AM - 05:00 PM', traderType: 'wholesale', color: '#e67e22' },
+          { id: 5, name: 'TechZone Electronics', initials: 'TZ', phone: '+255756789012', whatsapp: '+255756789012', company: 'TechZone Electronics', location: 'Mwanza, Ilemela', hours: '10:00 AM - 07:00 PM', traderType: 'retail', color: '#9b59b6' }
+        ];
+
+        const productPool = [
+          { name: 'Samsung Galaxy S24 Ultra', type: 'electronics', price: 2500000, desc: 'Latest Samsung flagship with 200MP camera and S Pen.', image: null, delivery: 'yes', deliveryCost: 15000, regions: ['dar','arusha','mwanza'] },
+          { name: 'iPhone 15 Pro Max', type: 'electronics', price: 3200000, desc: 'Apple premium smartphone with titanium design.', image: null, delivery: 'yes', deliveryCost: 20000, regions: ['dar','dodoma'] },
+          { name: 'Nike Air Max 270', type: 'fashion', price: 180000, desc: 'Comfortable running shoes with air cushioning.', image: null, delivery: 'no', deliveryCost: 0, regions: [] },
+          { name: 'Designer Leather Bag', type: 'fashion', price: 95000, desc: 'Genuine leather handbag, perfect for any occasion.', image: null, delivery: 'yes', deliveryCost: 8000, regions: ['dar'] },
+          { name: 'Organic Honey 500ml', type: 'food', price: 25000, desc: 'Pure organic honey from Tanzanian bees.', image: null, delivery: 'yes', deliveryCost: 5000, regions: ['dar','morogoro','pwani'] },
+          { name: 'Fresh Avocados 100kg', type: 'food', price: 120000, desc: 'Export quality Hass avocados, bulk pricing available.', image: null, delivery: 'yes', deliveryCost: 25000, regions: ['dar','arusha','mbeya'] },
+          { name: 'Cement Twiga 50kg', type: 'construction', price: 32000, desc: 'High-quality Portland cement for construction.', image: null, delivery: 'yes', deliveryCost: 10000, regions: ['dar','pwani','tanga'] },
+          { name: 'Steel Rods 12mm', type: 'construction', price: 45000, desc: 'Reinforced steel rods, perfect for building foundations.', image: null, delivery: 'yes', deliveryCost: 15000, regions: ['dar'] },
+          { name: 'Sunflower Seeds 25kg', type: 'agriculture', price: 85000, desc: 'High-yield sunflower seeds for farming.', image: null, delivery: 'yes', deliveryCost: 12000, regions: ['morogoro','dodoma','iringa'] },
+          { name: 'MacBook Pro M3', type: 'electronics', price: 4500000, desc: 'Powerful laptop for professionals with M3 chip.', image: null, delivery: 'yes', deliveryCost: 25000, regions: ['dar','arusha'] },
+          { name: 'Cashew Nuts Premium', type: 'food', price: 35000, desc: 'Roasted and salted premium cashew nuts 1kg pack.', image: null, delivery: 'no', deliveryCost: 0, regions: [] },
+          { name: 'Roofing Sheets Gauge 32', type: 'construction', price: 55000, desc: 'Durable aluminum roofing sheets, various colors.', image: null, delivery: 'yes', deliveryCost: 20000, regions: ['dar','pwani'] },
+          { name: 'Adidas Running Shoes', type: 'fashion', price: 150000, desc: 'Lightweight running shoes with boost technology.', image: null, delivery: 'yes', deliveryCost: 8000, regions: ['dar'] },
+          { name: 'Toyota Land Cruiser V8', type: 'automotive', price: 85000000, desc: 'Luxury SUV, perfect for both city and off-road.', image: null, delivery: 'yes', deliveryCost: 500000, regions: ['dar'] },
+          { name: 'Sony PlayStation 5', type: 'electronics', price: 1200000, desc: 'Next-gen gaming console with ultra-high-speed SSD.', image: null, delivery: 'yes', deliveryCost: 15000, regions: ['dar','mwanza'] }
+        ];
+
+        allProducts = productPool.map((p, i) => {
+          const seller = sellers[i % sellers.length];
+          return {
+            id: i + 1,
+            ...p,
+            sellerId: seller.id,
+            sellerName: seller.name,
+            sellerInitials: seller.initials,
+            sellerPhone: seller.phone,
+            sellerWhatsapp: seller.whatsapp,
+            sellerCompany: seller.company,
+            sellerLocation: seller.location,
+            sellerHours: seller.hours,
+            sellerTraderType: seller.traderType,
+            sellerColor: seller.color
+          };
+        });
+      }
+
+      // ============ SMART SEARCH (Fuzzy Matching) ============
+      function smartSearch(query, products) {
+        if (!query.trim()) return products;
+        const q = query.toLowerCase().trim();
+        
+        return products.filter(p => {
+          const name = p.name.toLowerCase();
+          const type = p.type.toLowerCase();
+          const desc = p.desc ? p.desc.toLowerCase() : '';
+          const seller = p.sellerName.toLowerCase();
+          const company = p.sellerCompany.toLowerCase();
+          
+          // Exact match
+          if (name.includes(q) || type.includes(q) || desc.includes(q) || seller.includes(q) || company.includes(q)) return true;
+          
+          // Fuzzy: check character overlap
+          const qChars = q.replace(/\s/g, '').split('');
+          const nameChars = name.replace(/\s/g, '').split('');
+          let matches = 0;
+          qChars.forEach(c => { if (nameChars.includes(c)) matches++; });
+          if (matches >= Math.floor(qChars.length * 0.6)) return true;
+          
+          // Word partial matches
+          const qWords = q.split(/\s+/);
+          const allText = `${name} ${type} ${desc} ${seller}`;
+          return qWords.some(w => allText.includes(w));
+        });
+      }
+
+      // ============ RENDER PRODUCTS ============
+      function renderProducts(filter = '') {
+        const filtered = smartSearch(filter, allProducts);
+        const grid = document.getElementById('productGrid');
+        
+        if (filtered.length === 0) {
+          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#5a5a5a;"><i class="fas fa-search" style="font-size:2rem;margin-bottom:10px;color:#3a3a3a;"></i><p>No products found</p></div>`;
+        } else {
+          grid.innerHTML = filtered.map(p => `
+            <div class="product-card" data-id="${p.id}">
+              <div class="product-image">${p.image ? `<img src="${p.image}">` : '<i class="fas fa-box"></i>'}</div>
+              <div class="product-info">
+                <div class="product-name">${p.name}</div>
+                <div class="product-price">TZS ${p.price.toLocaleString()}</div>
+                <div class="product-meta">
+                  <span class="trader-badge ${p.sellerTraderType === 'wholesale' ? 'badge-wholesale' : 'badge-retail'}">${p.sellerTraderType === 'wholesale' ? 'Wholesale' : 'Retail'}</span>
+                  <span>${p.sellerCompany}</span>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+        
+        document.querySelectorAll('.product-card').forEach(card => {
+          card.addEventListener('click', function() {
+            const id = parseInt(this.dataset.id);
+            const product = allProducts.find(p => p.id === id);
+            if (product) showProductDetail(product);
+          });
+        });
+      }
+
+      // ============ PRODUCT DETAIL ============
+      function showProductDetail(product) {
+        document.getElementById('detailContent').innerHTML = `
+          <div class="detail-image">${product.image ? `<img src="${product.image}">` : '<i class="fas fa-box" style="font-size:3rem;color:#3a3a3a;"></i>'}</div>
+          <div class="detail-name">${product.name}</div>
+          <span class="trader-badge ${product.sellerTraderType === 'wholesale' ? 'badge-wholesale' : 'badge-retail'}">${product.sellerTraderType === 'wholesale' ? 'WHOLESALE' : 'RETAIL'}</span>
+          <div class="detail-price">TZS ${product.price.toLocaleString()}</div>
+          <div class="detail-desc">${product.desc}</div>
+          <div class="detail-meta-row">
+            <span><i class="fas fa-store"></i> ${product.sellerCompany}</span>
+            <span><i class="fas fa-user"></i> ${product.sellerName}</span>
+          </div>
+          <div class="detail-meta-row">
+            <span><i class="fas fa-map-marker-alt"></i> ${product.sellerLocation}</span>
+            <span><i class="fas fa-clock"></i> ${product.sellerHours}</span>
+          </div>
+          <div class="delivery-info ${product.delivery === 'yes' ? 'delivery-yes' : 'delivery-no'}">
+            ${product.delivery === 'yes' ? `🚚 Delivery: Yes • TZS ${product.deliveryCost.toLocaleString()} • ${product.regions.map(r=>r.charAt(0).toUpperCase()+r.slice(1)).join(', ')}` : '🚚 Delivery: Not Available'}
+          </div>
+        `;
+        
+        document.getElementById('detailActions').innerHTML = `
+          <a class="btn-action btn-wa" href="https://wa.me/${product.sellerWhatsapp.replace(/\D/g,'')}" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+          <a class="btn-action btn-call" href="tel:${product.sellerPhone.replace(/\D/g,'')}"><i class="fas fa-phone"></i> Call</a>
+          <button class="btn-action btn-dm" id="btnOpenChat"><i class="fas fa-comment-dots"></i> DM</button>
+        `;
+        
+        document.getElementById('btnOpenChat').addEventListener('click', function() {
+          openChatWithSeller(product);
+        });
+        
+        navigateTo(pageDetail);
+      }
+
+      // ============ CHAT SYSTEM ============
+      function openChatWithSeller(product) {
+        activeChatSellerId = product.sellerId;
+        
+        document.getElementById('chatAvatar').style.background = product.sellerColor;
+        document.getElementById('chatAvatar').textContent = product.sellerInitials;
+        document.getElementById('chatSellerName').textContent = product.sellerName;
+        
+        if (!conversations[product.sellerId]) {
+          conversations[product.sellerId] = [
+            { text: `Hello! I'm interested in your product: ${product.name}`, incoming: false, time: new Date() }
+          ];
+          // Simulate seller reply
+          setTimeout(() => {
+            conversations[product.sellerId].push({
+              text: `Hi! Thank you for your interest. The ${product.name} is available. How can I help you?`,
+              incoming: true, time: new Date()
+            });
+            if (activeChatSellerId === product.sellerId) renderChatMessages();
+          }, 1500);
+        }
+        
+        renderChatMessages();
+        navigateTo(pageChat);
+        setTimeout(() => document.getElementById('chatInput').focus(), 400);
+      }
+
+      function renderChatMessages() {
+        const msgs = conversations[activeChatSellerId] || [];
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = msgs.map(m => `
+          <div class="chat-bubble ${m.incoming ? 'incoming' : 'outgoing'}">
+            ${m.text}
+          </div>
+        `).join('');
+        container.scrollTop = container.scrollHeight;
+      }
+
+      document.getElementById('btnSendChat').addEventListener('click', sendChatMessage);
+      document.getElementById('chatInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendChatMessage();
+      });
+
+      function sendChatMessage() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text || !activeChatSellerId) return;
+        
+        if (!conversations[activeChatSellerId]) conversations[activeChatSellerId] = [];
+        conversations[activeChatSellerId].push({ text, incoming: false, time: new Date() });
+        input.value = '';
+        renderChatMessages();
+        
+        // Simulate seller reply
+        setTimeout(() => {
+          const replies = ['Sure, let me check that for you.', 'Okay, I will prepare your order.', 'Thank you for your message!', 'Is there anything else I can help with?', 'I will send you the details shortly.'];
+          conversations[activeChatSellerId].push({
+            text: replies[Math.floor(Math.random() * replies.length)],
+            incoming: true, time: new Date()
+          });
+          if (activeChatSellerId && pageChat.classList.contains('page-active')) renderChatMessages();
+        }, 2000 + Math.random() * 3000);
+      }
+
+      // Order Now button
+      document.getElementById('btnOrderNow').addEventListener('click', function() {
+        if (!activeChatSellerId || !currentUser) return;
+        const product = allProducts.find(p => p.sellerId === activeChatSellerId);
+        const productName = product ? product.name : 'this product';
+        
+        const orderMsg = `🛒 ORDER REQUEST from ${currentUser.email} for "${productName}". Please provide payment and delivery details.`;
+        
+        if (!conversations[activeChatSellerId]) conversations[activeChatSellerId] = [];
+        conversations[activeChatSellerId].push({ text: orderMsg, incoming: false, time: new Date() });
+        renderChatMessages();
+        showToast('Order request sent to seller!', 'success');
+        
+        setTimeout(() => {
+          conversations[activeChatSellerId].push({
+            text: `Order received! I will process your order for ${productName}. Please check your email for invoice.`,
+            incoming: true, time: new Date()
+          });
+          if (activeChatSellerId && pageChat.classList.contains('page-active')) renderChatMessages();
+        }, 2000);
+      });
+
+      // Chat back button -> Message List
+      document.getElementById('btnChatBack').addEventListener('click', function() {
+        renderMessageList();
+        navigateTo(pageMsgList);
+      });
+
+      // Message List
+      function renderMessageList() {
+        const sellersWithChats = Object.keys(conversations).filter(k => conversations[k].length > 0);
+        const container = document.getElementById('msgListScroll');
+        
+        if (sellersWithChats.length === 0) {
+          container.innerHTML = `<div style="text-align:center;padding:40px;color:#5a5a5a;"><i class="fas fa-inbox" style="font-size:2rem;margin-bottom:10px;"></i><p>No conversations yet</p></div>`;
+        } else {
+          container.innerHTML = sellersWithChats.map(sellerId => {
+            const seller = allProducts.find(p => p.sellerId === parseInt(sellerId));
+            const msgs = conversations[sellerId];
+            const lastMsg = msgs[msgs.length - 1];
+            if (!seller) return '';
+            return `
+              <div class="msg-item" data-seller-id="${sellerId}">
+                <div class="chat-avatar" style="background:${seller.sellerColor};flex-shrink:0;">${seller.sellerInitials}</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="color:#e6d7b8;font-size:0.85rem;font-weight:600;">${seller.sellerName}</div>
+                  <div style="color:#7a7a7a;font-size:0.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${lastMsg.text}</div>
+                </div>
+                <div style="color:#5a5a5a;font-size:0.6rem;">${lastMsg.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+              </div>
+            `;
+          }).join('');
+        }
+        
+        document.querySelectorAll('.msg-item').forEach(item => {
+          item.addEventListener('click', function() {
+            activeChatSellerId = parseInt(this.dataset.sellerId);
+            const seller = allProducts.find(p => p.sellerId === activeChatSellerId);
+            if (seller) {
+              document.getElementById('chatAvatar').style.background = seller.sellerColor;
+              document.getElementById('chatAvatar').textContent = seller.sellerInitials;
+              document.getElementById('chatSellerName').textContent = seller.sellerName;
+            }
+            renderChatMessages();
+            navigateTo(pageChat);
+          });
+        });
+      }
+
+      document.getElementById('btnMsgListBack').addEventListener('click', function() {
+        navigateTo(pageBrowse);
+      });
+
+      // ============ SEARCH ============
+      document.getElementById('searchInput').addEventListener('input', function() {
+        renderProducts(this.value);
+        document.querySelectorAll('.search-tag').forEach(t => t.classList.remove('active-tag'));
+        if (!this.value.trim()) {
+          document.querySelectorAll('.search-tag').forEach(t => t.classList.remove('active-tag'));
+          document.querySelector('.search-tag[data-tag="all"]')?.classList.add('active-tag');
+        }
+      });
+
+      document.getElementById('searchTags').addEventListener('click', function(e) {
+        const tag = e.target.closest('.search-tag');
+        if (!tag) return;
+        
+        document.querySelectorAll('.search-tag').forEach(t => t.classList.remove('active-tag'));
+        tag.classList.add('active-tag');
+        
+        const tagFilter = tag.dataset.tag;
+        if (tagFilter === 'all') {
+          document.getElementById('searchInput').value = '';
+          renderProducts('');
+        } else {
+          document.getElementById('searchInput').value = tagFilter;
+          renderProducts(tagFilter);
+        }
+      });
+
+      // ============ DETAIL BACK ============
+      document.getElementById('btnListBack').addEventListener('click', () => {
+        window.location.href='index.html'; // Redirect to home page or previous page
+        window.history.back();
+      });
+      const browseHomeBtn = document.getElementById('btnBrowseHome');
+      if (browseHomeBtn) {
+        browseHomeBtn.addEventListener('click', function() {
+          window.location.href = 'index.html';
+        });
+      }
+
+      document.getElementById('btnDetailBack').addEventListener('click', function() {
+        navigateTo(pageBrowse);
+      });
+
+      // ============ INIT ============
+      navigateTo(pageLogin);
+      // Show login first
+    })();
+  </script>
+</body>
+</html>
